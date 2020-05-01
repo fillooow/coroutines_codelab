@@ -131,7 +131,9 @@ class MainViewModel(private val repository: TitleRepository) : ViewModel() {
     fun refreshTitle() = viewModelScope.launch { // так как мы используем viewModelScope, при выходе с экрана
         // вся работа (запрос в сеть и поход в бд) остановится
 
-        launchDataLoad { repository.refreshTitle() }
+        launchDataLoad {
+            repository.refreshTitle()
+        }
     }
 
     private fun launchDataLoad(block: suspend () -> Unit): Job = viewModelScope.launch {
