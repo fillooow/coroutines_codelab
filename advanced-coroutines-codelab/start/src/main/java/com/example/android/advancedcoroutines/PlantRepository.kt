@@ -16,6 +16,8 @@
 
 package com.example.android.advancedcoroutines
 
+import com.example.android.advancedcoroutines.util.CacheOnSuccess
+import com.example.android.advancedcoroutines.utils.ComparablePair
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
@@ -33,6 +35,22 @@ class PlantRepository private constructor(
     private val plantService: NetworkService,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
+
+    companion object {
+
+        // For Singleton instantiation
+        @Volatile
+        private var instance: PlantRepository? = null
+
+        fun getInstance(plantDao: PlantDao, plantService: NetworkService) =
+            instance ?: synchronized(this) {
+                instance ?: PlantRepository(plantDao, plantService).also { instance = it }
+            }
+    }
+
+    private var plantsListSortOrderCache = CacheOnSuccess(onErrorFallback = { emptyList() }) {
+        plantService.customPlantSortOrder()
+    }
 
     /**
      * Fetch a list of [Plant]s from the database.
@@ -91,14 +109,18 @@ class PlantRepository private constructor(
         plantDao.insertAll(plants)
     }
 
-    companion object {
+    /**
+     * Rearrange the list, placing Plants that are in the customSortOrder at the front of the list.
+     */
+    private fun List<Plant>.applySort(customSortOrder: List<String>): List<Plant> = sortedBy { plant ->
 
-        // For Singleton instantiation
-        @Volatile private var instance: PlantRepository? = null
+        val positionForItem = customSortOrder.indexOf(plant.plantId).let { order ->
 
-        fun getInstance(plantDao: PlantDao, plantService: NetworkService) =
-            instance ?: synchronized(this) {
-                instance ?: PlantRepository(plantDao, plantService).also { instance = it }
+            when (order > -1) {
+                true -> order
+                else -> Int.MAX_VALUE
             }
+        }
+        ComparablePair(positionForItem, plant.name)
     }
 }
