@@ -27,6 +27,7 @@ import androidx.room.Query
  */
 @Dao
 interface PlantDao {
+
     @Query("SELECT * FROM plants ORDER BY name")
     fun getPlants(): LiveData<List<Plant>>
 
