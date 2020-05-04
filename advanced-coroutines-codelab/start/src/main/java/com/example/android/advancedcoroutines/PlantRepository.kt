@@ -39,7 +39,7 @@ class PlantRepository private constructor(
      * Returns a LiveData-wrapped List of Plants.
      */
     val plants = plantDao.getPlants()
-//
+
     /**
      * Fetch a list of [Plant]s from the database that matches a given [GrowZone].
      * Returns a LiveData-wrapped List of Plants.
