@@ -26,7 +26,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 /**
@@ -75,6 +77,10 @@ class PlantRepository private constructor(
 
     val plantsFlow: Flow<List<Plant>>
         get() = plantDao.getPlantsFlow()
+            .combine(customSortFlow) { plants, sortOrder ->
+                plants.applySort(sortOrder)
+            }.flowOn(defaultDispatcher)
+            .conflate() // перезаписывает значение в буффере последним пришедшим значением
 
     private val customSortFlow = plantsListSortOrderCache::getOrAwait.asFlow()
 
